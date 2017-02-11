@@ -1,3 +1,37 @@
+
+var Location = function(title, latitude, longitude) {
+	this.title = title;
+	this.latitude = latitude;
+	this.longitude = longitude;
+}
+
+Location.prototype.getTitle = function() {
+	return title;
+}
+
+Location.prototype.getLatLngLiteral = function() {
+	return {
+		lat: this.latitude,
+		lng: this.longitude
+	}
+}
+
+var ViewModel = function() {
+
+
+
+
+
+
+
+
+	// End model here
+};
+
+
+
+
+
 function initMap() {
 	var map;
 	map = new google.maps.Map(document.getElementById('map'), {
@@ -5,6 +39,7 @@ function initMap() {
 		zoom: 13
 	});
 
+		// Create model here
 	var locations = [
 		{title: '178 Vallance Road', location: {lat: 51.524026, lng: -0.06396}},
 		{title: 'The Blind Beggar', location: {lat: 51.520052, lng: -0.056939}},
@@ -22,6 +57,7 @@ function initMap() {
 		{title: 'Wiliton Music Hall', location: {lat: 51.510701, lng: -0.066897}},
 		{title: 'The Tower of London', location: {lat: 51.525074, lng: -0.06693}},
 	];
+	
 
 
 	var largeInfoWindow = new google.maps.InfoWindow();
