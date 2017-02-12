@@ -1,0 +1,91 @@
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	height: 100%;
+}
+
+.locations-menu {
+	width: 15%;
+	height: calc(100% - 40px);
+	background-color: black;
+	float: left;
+	color: white;
+}
+
+#map {
+	height: calc(100% - 40px);
+	width: 85%;
+	float: left;
+}
+
+.location-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+.search {
+	width:100%;
+	height: 40px;
+	margin: auto;
+}
+
+#search-field {
+	float: left;			
+	width: 75%;
+	padding: 0;
+	margin-right: 5px;
+}
+
+.search-field-container {
+	margin: auto;
+	height: 22px;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	padding-left: 5px;
+}
+
+.location-list-item {
+	padding:5px;
+}
+
+.location-list-item:hover {
+	background-color: rgb(93, 93, 93);
+}
+
+.search-icon {
+	float: clear;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.heading-bar {
+	height: 40px;
+	width: 100%;
+	background-color: black;
+	color: white;
+}
+
+.heading-bar-title {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	margin-left: 50px;
+}
+
+@media (max-width: 815px) {
+	.locations-menu {
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 560px) {
+	.locations-menu {
+		font-size: 9px;
+	}
+}

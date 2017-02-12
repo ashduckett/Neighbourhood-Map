@@ -3,56 +3,28 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" type="text/css" href="css/normalize.css">
-	<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyBwBlJ904e6jZa1nunlPK9vPGUgI6q35PU&v=3&callback=kickOff"></script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	
+	<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyBwBlJ904e6jZa1nunlPK9vPGUgI6q35PU&v=3"></script>
+	<script async defer type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script async defer type="text/javascript" src="js/knockout-3.4.1.js"></script>
 	<script type="text/javascript" src="js/app.js"></script>
-	<script type="text/javascript" src="js/knockout-3.4.1.js"></script>
-	<style>
-		html, body {
-			height: 100%;
-		}
-
-		.locations-menu {
-			width: 15%;
-			height: 100%;
-			background-color: black;
-			float: left;
-			color: white;
-		}
-
-		#map {
-			height:100%;
-			width: 85%;
-			float: left;
-		}
-
-		.location-list {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-
-		}
-
-		.search {
-			width:100%;
-		}
-
-		#search-field {
-			display: block;
-			margin: auto;
-			width: 80%;
-			margin-top: 5px;
-			margin-bottom: 5px;
-		}
-
-	</style>
 
 </head>
 <body>
+	<div class="heading-bar">
+		<div class="heading-bar-title">The Kray Twins</div>
+	</div>
 	<div class="locations-menu">
 		<div class="search">
-			<input id="search-field" type="text" placeholder="Enter search term...">
-		</div>
+			<div class="search-field-container">
+				<input data-bind="textInput: searchText" id="search-field" type="text" placeholder="Enter search term...">
+				<i class="search-icon fa fa-search" aria-hidden="true"></i>
+			</div>
+		</div> 
+
+
 		<ul class="location-list" data-bind="foreach: listViewListings">
 			<li class="location-list-item" data-bind="text: $data.title, click: $parent.animateMarker"></li>
 		</ul>
