@@ -15,8 +15,9 @@
 		.locations-menu {
 			width: 15%;
 			height: 100%;
-			background-color: red;
+			background-color: black;
 			float: left;
+			color: white;
 		}
 
 		#map {
@@ -29,12 +30,29 @@
 			list-style: none;
 			padding: 0;
 			margin: 0;
+
 		}
+
+		.search {
+			width:100%;
+		}
+
+		#search-field {
+			display: block;
+			margin: auto;
+			width: 80%;
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+
 	</style>
 
 </head>
 <body>
 	<div class="locations-menu">
+		<div class="search">
+			<input id="search-field" type="text" placeholder="Enter search term...">
+		</div>
 		<ul class="location-list" data-bind="foreach: listViewListings">
 			<li class="location-list-item" data-bind="text: $data.title, click: $parent.animateMarker"></li>
 		</ul>

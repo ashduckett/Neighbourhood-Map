@@ -1,9 +1,10 @@
 
-var Location = function(title, latitude, longitude, searchTerm) {
+var Location = function(title, latitude, longitude, searchTerm, relevance) {
 	this.title = title;
 	this.latitude = latitude;
 	this.longitude = longitude;
 	this.searchTerm = searchTerm;
+	this.relevance = relevance;
 }
 
 Location.prototype.getTitle = function() {
@@ -21,8 +22,9 @@ Location.prototype.getLatLngLiteral = function() {
 	}
 }
 
-
-
+Location.prototype.getRelevance = function() {
+	return this.relevance;
+}
 
 var LocationSet = function(locations) {
 	this.locationSet = [];
@@ -54,21 +56,21 @@ var Model = function() {
 	// No knockout requred here. We're just initialising the map and this will also be handy
 	// for the initial state of the list of locations.
 	this.locationSet = new LocationSet([
-		new Location('178 Vallance Road', 51.524026, -0.06396, 'Bethnal Green'),
-		new Location('The Blind Beggar',  51.520052, -0.056939, 'The Blind Beggar'),
-		new Location('Pellicci\'s Café', 51.52649, -0.063428, 'Bethnal Green'),
-		new Location('Esmerelda\'s Barn', 51.501943, -0.156234, 'Esmeralda\'s Barn'),
-		new Location('Bow Street Magistrates\' Court', 51.527344, -0.023625, 'Bow Street Magistrates\' Court'),
-		new Location('The Tower of London', 51.508112, -0.075949, 'Tower of London'),
-		new Location('The Royal Oak', 51.529547, -0.069298, 'The Royal Oak, Bethnal Green'),
-		new Location('Repton Boy\'s Club', 51.524215, -0.065311, 'Cheshire Street'),
-		new Location('The Carpenter\'s Arms', 51.523962, -0.067356, 'Cheshire Street'),
-		new Location('The Speakeasy Club', 51.516436, -0.141724, 'The Speakeasy Club'),
-		new Location('Turners Old Star', 51.505372, -0.059403, 'Wapping'),
-		new Location('The Ivy House', 51.458296, -0.052114, 'The Ivy House'),
-		new Location('97 Evering Road', 51.558621, -0.067523, 'Jack McVitie'),
-		new Location('Wiliton Music Hall', 51.510701, -0.066897, 'Wilton\'s Music Hall'),
-		new Location('St Matthews\'s Church', 51.525074, -0.06693, 'St Matthew\'s, Bethnal Green')
+		new Location('178 Vallance Road', 51.524026, -0.06396, 'Bethnal Green', 'The Kray Twins\'s childhood home.'),
+		new Location('The Blind Beggar',  51.520052, -0.056939, 'The Blind Beggar', 'The location where Ronnie shot George Cornell.'),
+		new Location('Pellicci\'s Café', 51.52649, -0.063428, 'Bethnal Green', 'A favourite haunt of the Kray\'s in Bethnal Green'),
+		new Location('Esmerelda\'s Barn', 51.501943, -0.156234, 'Esmeralda\'s Barn', 'Now a five star hotel called the Berkely, this was once a Knightsbridge club owned by the Kray twins from 1960 to 1963 when it was closed.'),
+		new Location('Bow Street Magistrates\' Court', 51.527344, -0.023625, 'Bow Street Magistrates\' Court', 'The Krays were among numerous famous defendants to appear at Bow Street during its 266 year existence. It closed in 2006.'),
+		new Location('The Tower of London', 51.508112, -0.075949, 'Tower of London', 'In 1952, the twins were among the last prisoners to be held at the tower. They had failed to report for national service'),
+		new Location('The Royal Oak', 51.529547, -0.069298, 'The Royal Oak, Bethnal Green', 'The Krays weren\'t known to have frequented this Columbia Road pub, but it appears in both Legend and the 1990 film \'The Krays\'.'),
+		new Location('Repton Boy\'s Club', 51.524215, -0.065311, 'Cheshire Street', 'This club is where the twins trained to box. It\'s been running since 1984.'),
+		new Location('The Carpenter\'s Arms', 51.523962, -0.067356, 'Cheshire Street', 'Purchased by the twins in 1967 as a gift for their mother, Violet.'),
+		new Location('The Speakeasy Club', 51.516436, -0.141724, 'The Speakeasy Club', 'This club at 48 Margaret Street was there until 1970. A lifelong friend of the twins Laurie O\'Leary became manager in 1968.'),
+		new Location('Turners Old Star', 51.505372, -0.059403, 'Wapping', 'Not a pub the twins frequented, but this pub can be seen in the film \'Legend\'.'),
+		new Location('The Ivy House', 51.458296, -0.052114, 'The Ivy House', 'Not a pub the twins frequented, but this pub can be seen in the film \'Legend\'.'),		
+		new Location('97 Evering Road', 51.558621, -0.067523, 'Jack McVitie', 'Jack "the Hat" McVite was murdered by Reggie Kray in 1967 at this basement flat in Stoke Newington.'),
+		new Location('Wiliton Music Hall', 51.510701, -0.066897, 'Wilton\'s Music Hall', 'This music hall appears in the 1990 film \'The Krays\'.'),
+		new Location('St Matthews\'s Church', 51.525074, -0.06693, 'St Matthew\'s, Bethnal Green', 'The funeral services for both twins were held at this 18th-century church on Hereford Street.')
 	]);
 };
 
@@ -77,10 +79,6 @@ Model.prototype.getLocationSetAsArray = function() {
 }
 
 Model.prototype.getLocations = function() {
-	//console.log(this.locationSet.getLocationsAsArray());
-
-	console.log('location set is');
-	console.log(this.locationSet);
 	return this.locationSet.getLocationsAsArray();
 }
 
@@ -174,7 +172,7 @@ MapView.prototype.init = function(locations) {
 		marker.addListener('click', (function(location) {
 			return function() {
 				context.animateMarker(this.id);
-				populateInfoWindow(this, largeInfoWindow, location.getSearchTerm());
+				populateInfoWindow(this, largeInfoWindow, location.getSearchTerm(), location.relevance);
 			}
 		})(location));
 
@@ -184,7 +182,7 @@ MapView.prototype.init = function(locations) {
 	}
 };
 
-function populateInfoWindow(marker, infoWindow, searchTerm) {
+function populateInfoWindow(marker, infoWindow, searchTerm, relevance) {
 	// Check to make sure the infoWindow is not already opened on this marker
 	if(infoWindow.marker != marker) {
 		infoWindow.marker = marker;
@@ -201,7 +199,7 @@ function populateInfoWindow(marker, infoWindow, searchTerm) {
 				var articleLink = response[3][0];
 
 				infoWindow.setContent('<div><strong>' + marker.title + '</strong></div><div><p>' + articleText + 
-					'</p></div><p><a href="' + articleLink + '">Find out more about ' + marker.title + ' here.</a></p>' );
+					'</p><p>' + relevance + '</p></div><p><a href="' + articleLink + '">Find out more about ' + marker.title + ' here.</a>');
 				infoWindow.open(map, marker);
 		}});
 
