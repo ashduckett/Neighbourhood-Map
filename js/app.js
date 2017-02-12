@@ -86,71 +86,84 @@ Model.prototype.getMarkers = function() {
 };
  
 var ViewModel = function() {
+	if (typeof google === 'undefined') {
+		alert('Google object not initialised. Cannot continue.');
+	} else {
+		// This model contains all our locations
+		this.model = new Model();
+		this.mapView = new MapView(this);
+		this.searchText = ko.observable();
 
-	// This model contains all our locations
-	this.model = new Model();
-	this.mapView = new MapView(this);
-	this.searchText = ko.observable();
 
-
-	// Now I want an observable array to store all of the items in the list view
-	// This will be about our only use of knockout...I think?
-	
-	// A master copy
-	this.actualListViewListings = this.model.getLocations();
-
-	// What's displayed in the list on the screen
-	this.listViewListings = ko.observableArray(this.model.getLocations());
-	
-
-	var context = this;
-
-	// This fires when someone types into the search field
-	this.searchText.subscribe(function(newValue) {
+		// Now I want an observable array to store all of the items in the list view
+		// This will be about our only use of knockout...I think?
 		
-		// A place to store Location objects that match the search
-		var results = [];
+		// A master copy
+		this.actualListViewListings = this.model.getLocations();
 
-		// If there is something in the search box
-		if(newValue.trim() != '') {
+		// What's displayed in the list on the screen
+		this.listViewListings = ko.observableArray(this.model.getLocations());
+		
 
-			// Iterate over the original list of locations
-			for(var i = 0; i < context.actualListViewListings.length; i++) {
+		var context = this;
 
-				// Grab the title
-				var title = context.actualListViewListings[i].title;
-				
-				// Case insensitive search of the new value for the current title
-				var regularExp = new RegExp(newValue, 'i');
-				var matches = regularExp.exec(title);
+		// This fires when someone types into the search field
+		this.searchText.subscribe(function(newValue) {
+			
+			// A place to store Location objects that match the search
+			var results = [];
 
-				// If there is a match, store the Location object in the results array, and
-				// make show the marker is displayed for it
-				if(matches != null) {
-					results.push(context.actualListViewListings[i]);
-					context.getMarkerById(i).setMap(context.mapView.getMap());
-				} else {
-					// Otherwise hide the marker
-					context.getMarkerById(i).setMap(null);
+			// If there is something in the search box
+			if(newValue.trim() != '') {
+
+				// Iterate over the original list of locations
+				for(var i = 0; i < context.actualListViewListings.length; i++) {
+
+					// Grab the title
+					var title = context.actualListViewListings[i].title;
+					
+					// Case insensitive search of the new value for the current title
+					var regularExp = new RegExp(newValue, 'i');
+					var matches = regularExp.exec(title);
+
+					// If there is a match, store the Location object in the results array, and
+					// make show the marker is displayed for it
+					if(matches != null) {
+						results.push(context.actualListViewListings[i]);
+						//context.getMarkerById(i).setMap(context.mapView.getMap());
+						context.getMarkerById(i).setVisible(true);
+					} else {
+						// Otherwise hide the marker
+						//context.getMarkerById(i).setMap(null);
+						context.getMarkerById(i).setVisible(false);
+					}
 				}
+				// Add the results to the displaying observable array
+				context.listViewListings(results);
+			} else {
+				// Just display everything because no filter's applied
+				context.listViewListings(context.actualListViewListings);
+
+
+				var allMarkers = context.model.getMarkers();
+
+				for(var i = 0; i < allMarkers.length; i++) {
+					allMarkers[i].setVisible(true);
+				}			
 			}
-			// Add the results to the displaying observable array
-			context.listViewListings(results);
-		} else {
-			// Just display everything because no filter's applied
-			context.listViewListings(context.actualListViewListings);			
-		}
-	});
+		});
 
 
-	// Initialise the map and get it to show, based on the locations in our model
-	this.mapView.init(this.model.getLocations());
+		// Initialise the map and get it to show, based on the locations in our model
+		this.mapView.init(this.model.getLocations());
 
-	// Method called by knockout to animate clicked marker and display information.
-	this.animateMarker = function(listLocation) {
-       	var marker = this.model.getMarkerById(listLocation.id);
-       	this.mapView.populateInfoWindow(marker, listLocation.getSearchTerm(), listLocation.getRelevance());
-	}.bind(this);
+		var infoWindow = new google.maps.InfoWindow();
+		// Method called by knockout to animate clicked marker and display information.
+		this.animateMarker = function(listLocation) {
+	       	var marker = this.model.getMarkerById(listLocation.id);
+	       	this.mapView.populateInfoWindow(marker, listLocation.getSearchTerm(), listLocation.getRelevance(), infoWindow);
+		}.bind(this);
+	}
 };
 
 ViewModel.prototype.storeMarker = function(key, value) {
@@ -183,7 +196,7 @@ MapView.prototype.init = function(locations) {
 
 	this.map = map;
 
-	var largeInfoWindow = new google.maps.InfoWindow();
+	var infoWindow = new google.maps.InfoWindow();
 	var bounds = new google.maps.LatLngBounds();
 
 	for(var i = 0; i < locations.length; i++) {
@@ -208,24 +221,30 @@ MapView.prototype.init = function(locations) {
 		this.viewModel.storeMarker(marker.id, marker);
 		var context = this;
 
+
 		// Sadly this can't be done with knockout since it won't track the markers
 		marker.addListener('click', (function(location) {
 			return function() {
-				context.populateInfoWindow(this, location.getSearchTerm(), location.relevance);
+				context.populateInfoWindow(this, location.getSearchTerm(), location.relevance, infoWindow);
 			}
 		})(location));
 		map.fitBounds(bounds);
 	}
+
+	// Ensure markers are always displayed as screen is resized
+	google.maps.event.addDomListener(window, 'resize', function() {
+  		map.fitBounds(bounds);
+	});
+
+
 };
 
-MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance) {
+MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance, infoWindow) {
 	
 	// Check to see if an info window was displayed previously, and if it was, close it.
 	if(this.infoWindow != null) {
     	this.infoWindow.close();
     }
-
-    var infoWindow = new google.maps.InfoWindow();
 
     // Check to make sure the infoWindow is not already opened on this marker
 	if(infoWindow.marker != marker) {
@@ -239,7 +258,7 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance) {
 
 		infoWindow.marker = marker;
 		marker.setAnimation(google.maps.Animation.BOUNCE);	
-		var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + searchTerm +
+		var wikiUrl = 'http://en.wikipedggia.org/w/api.php?action=opensearch&search=' + searchTerm +
  		'&format=json&callback=wikiCallback';
 
 		$.ajax({
@@ -250,11 +269,20 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance) {
 				var articleText = response[2][0];
 				var articleLink = response[3][0];
 
+				if(!articleText) {
+					articleText = "Article text not found."
+				}
+
+				if(!articleLink) {
+					articleLink = '<p>No link found.</p>';
+				} else {
+					articleLink = '<p><a href="' + articleLink + '">Find out more about ' + marker.title + ' here.</a></p>';
+				}
+
 				var sourcesHTML = '<p><em>Sources: <a href="http://www.telegraph.co.uk">The Telegraph</a> and <a href="https://en.wikipedia.org">Wikipedia</a>.</em></p>';
 
 				infoWindow.setContent('<div><strong>' + marker.title + '</strong></div><div><p>' + articleText + 
-					'</p><p>' + relevance + '</p></div><p><a href="' + articleLink + '">Find out more about ' + marker.title + ' here.</a>' + 
-					sourcesHTML);
+					'</p><p>' + relevance + '</p>' + articleLink + sourcesHTML);
 				
 				infoWindow.open(map, marker);
 
@@ -264,13 +292,14 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance) {
 			error: function() {
 				infoWindow.setContent('<div>There appears to be a problem obtaining Wikipedia information. Try later.</div>');
 				infoWindow.open(map, marker);
-
-				// Stash the info window so it can be closed when a new one pops up.
-				context.infoWindow = infoWindow;
 			}
 
 
 
 	});
 	}
+}
+
+function googleApiError() {
+	window.alert('Error! The Google API has broken. Please try again later.')
 }
