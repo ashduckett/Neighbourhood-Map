@@ -1,12 +1,17 @@
 
-var Location = function(title, latitude, longitude) {
+var Location = function(title, latitude, longitude, searchTerm) {
 	this.title = title;
 	this.latitude = latitude;
 	this.longitude = longitude;
+	this.searchTerm = searchTerm;
 }
 
 Location.prototype.getTitle = function() {
-	return title;
+	return this.title;
+}
+
+Location.prototype.getSearchTerm = function() {
+	return this.searchTerm;
 }
 
 Location.prototype.getLatLngLiteral = function() {
@@ -16,56 +21,140 @@ Location.prototype.getLatLngLiteral = function() {
 	}
 }
 
-var ViewModel = function() {
 
 
 
+var LocationSet = function(locations) {
+	this.locationSet = [];
+
+	for(var i = 0; i < locations.length; i++) {
+		this.locationSet.push(locations[i]);
+	}
+}
+
+LocationSet.prototype.getLocationCount = function() {
+	return this.locationSet.length;
+}
+
+LocationSet.prototype.getLocationArrayForGoogleMaps = function() {
+	var result = [];
+
+	for(var i = 0; i < this.locationSet.length; i++) {
+		result.push({title: this.locationSet[i].getTitle(), location: {lat: this.locationSet[i].latitude, lng: this.locationSet[i].longitude}, id: i});
+	}
+	return result;
+}
+
+LocationSet.prototype.getLocationsAsArray = function() {
+	return this.locationSet;
+}
 
 
-
-
-
-	// End model here
+var Model = function() {
+	// No knockout requred here. We're just initialising the map and this will also be handy
+	// for the initial state of the list of locations.
+	this.locationSet = new LocationSet([
+		new Location('178 Vallance Road', 51.524026, -0.06396, 'Bethnal Green'),
+		new Location('The Blind Beggar',  51.520052, -0.056939, 'The Blind Beggar'),
+		new Location('Pellicci\'s Café', 51.52649, -0.063428, 'Bethnal Green'),
+		new Location('Esmerelda\'s Barn', 51.501943, -0.156234, 'Esmeralda\'s Barn'),
+		new Location('Bow Street Magistrates\' Court', 51.527344, -0.023625, 'Bow Street Magistrates\' Court'),
+		new Location('The Tower of London', 51.508112, -0.075949, 'Tower of London'),
+		new Location('The Royal Oak', 51.529547, -0.069298, 'The Royal Oak, Bethnal Green'),
+		new Location('Repton Boy\'s Club', 51.524215, -0.065311, 'Cheshire Street'),
+		new Location('The Carpenter\'s Arms', 51.523962, -0.067356, 'Cheshire Street'),
+		new Location('The Speakeasy Club', 51.516436, -0.141724, 'The Speakeasy Club'),
+		new Location('Turners Old Star', 51.505372, -0.059403, 'Wapping'),
+		new Location('The Ivy House', 51.458296, -0.052114, 'The Ivy House'),
+		new Location('97 Evering Road', 51.558621, -0.067523, 'Jack McVitie'),
+		new Location('Wiliton Music Hall', 51.510701, -0.066897, 'Wilton\'s Music Hall'),
+		new Location('St Matthews\'s Church', 51.525074, -0.06693, 'St Matthew\'s, Bethnal Green')
+	]);
 };
 
+Model.prototype.getLocationSetAsArray = function() {
+	return this.locationSet.getLocationArrayForGoogleMaps();
+}
+
+Model.prototype.getLocations = function() {
+	//console.log(this.locationSet.getLocationsAsArray());
+
+	console.log('location set is');
+	console.log(this.locationSet);
+	return this.locationSet.getLocationsAsArray();
+}
 
 
 
 
-function initMap() {
+var ViewModel = function() {
+
+	// This model contains all our locations
+	var model = new Model();
+
+	// Initialise the map and get it to show, based on the locations in our model
+	var mapView = new MapView();
+
+	mapView.init(model.getLocations());
+
+
+
+	// Now I want an observable array to store all of the items in the list view
+	// This will be about our only use of knockout...I think?
+	this.listViewListings = ko.observableArray(model.getLocationSetAsArray());
+
+	this.animateMarker = function(listLocation) {
+        mapView.animateMarker(listLocation.id);
+	}
+
+
+
+};
+
+function kickOff() {
+	var viewModel = new ViewModel();
+	ko.applyBindings(viewModel);
+}
+
+var MapView = function() {
+	this.markers = [];
+}
+
+MapView.prototype.animateMarker = function(id) {
+	for(var i = 0; i < this.markers.length; i++) {
+		this.markers[i].setAnimation(null);
+	}
+
+	// Grab the marker identified by id and animate it
+	var marker = this.getMarkerById(id);
+    marker.setAnimation(google.maps.Animation.BOUNCE);	
+}
+
+MapView.prototype.getMarkerById = function(id) {
+	return this.markers[id];
+}
+
+MapView.prototype.getAllMarkers = function() {
+	return this.markers;
+}
+
+MapView.prototype.init = function(locations) {
 	var map;
 	map = new google.maps.Map(document.getElementById('map'), {
 		center: {lat: 40.7413549, lng: -73.9980244},
 		zoom: 13
 	});
 
-		// Create model here
-	var locations = [
-		{title: '178 Vallance Road', location: {lat: 51.524026, lng: -0.06396}},
-		{title: 'The Blind Beggar', location: {lat: 51.520052, lng: -0.056939}},
-		{title: 'Pellicci\'s Café', location: {lat: 51.52649, lng: -0.063428}},
-		{title: 'Esmarelda\'s Barn', location: {lat: 51.501943, lng: -0.156234}},
-		{title: 'Bow Majistrates Court', location: {lat: 51.527344, lng: -0.023625}},
-		{title: 'The Tower of London', location: {lat: 51.508112, lng: -0.075949}},
-		{title: 'The Royal Oak', location: {lat: 51.529547, lng: -0.069298}},
-		{title: 'Repton Boy\'s Club', location: {lat: 51.524215, lng: -0.065311}},
-		{title: 'The Carpenter\'s Arms', location: {lat: 51.523962, lng: -0.067356}},
-		{title: 'The Speakeasy Club', location: {lat: 51.516436, lng: -0.141724}},
-		{title: 'Turners Old Star', location: {lat: 51.505372, lng: -0.059403}},
-		{title: 'The Ivy House', location: {lat: 51.458296, lng: -0.052114}},
-		{title: '97 Evering Road', location: {lat: 51.558621, lng: -0.067523}},
-		{title: 'Wiliton Music Hall', location: {lat: 51.510701, lng: -0.066897}},
-		{title: 'The Tower of London', location: {lat: 51.525074, lng: -0.06693}},
-	];
-	
-
-
 	var largeInfoWindow = new google.maps.InfoWindow();
 	var bounds = new google.maps.LatLngBounds();
 
+
+
 	for(var i = 0; i < locations.length; i++) {
-		var position = locations[i].location;
-		var title = locations[i].title;
+		var location = locations[i];
+
+		var position = location.getLatLngLiteral();
+		var title = location.getTitle();
 
 		var marker = new google.maps.Marker({
 			map: map,
@@ -77,26 +166,47 @@ function initMap() {
 
 		bounds.extend(marker.position);
 
-		//markers.push(marker);
+		// Stash this for later as it'll be useful for identifying markers
+		// during event handling from the list
+		this.markers[marker.id] = marker;
+		var context = this;
 
-		marker.addListener('click', function() {
-			populateInfoWindow(this, largeInfoWindow);
-		});
+		marker.addListener('click', (function(location) {
+			return function() {
+				context.animateMarker(this.id);
+				populateInfoWindow(this, largeInfoWindow, location.getSearchTerm());
+			}
+		})(location));
+
+
 
 		map.fitBounds(bounds);
-
-		function populateInfoWindow(marker, infoWindow) {
-			// Check to make sure the infoWindow is not already opened on this marker
-			if(infoWindow.marker != marker) {
-				infoWindow.marker = marker;
-				infoWindow.setContent('<div>' + marker.title + '</div>');
-				infoWindow.open(map, marker);
-
-				infoWindow.addListener('closeClick', function() {
-					infoWindow.setMarker(null);
-				});
-			}
-		}
 	}
+};
 
+function populateInfoWindow(marker, infoWindow, searchTerm) {
+	// Check to make sure the infoWindow is not already opened on this marker
+	if(infoWindow.marker != marker) {
+		infoWindow.marker = marker;
+
+		var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + searchTerm +
+ 		'&format=json&callback=wikiCallback';
+
+		$.ajax({
+			url: wikiUrl,
+			dataType: "jsonp",
+			success: function(response) {
+				// This gets the text we want
+				var articleText = response[2][0];
+				var articleLink = response[3][0];
+
+				infoWindow.setContent('<div><strong>' + marker.title + '</strong></div><div><p>' + articleText + 
+					'</p></div><p><a href="' + articleLink + '">Find out more about ' + marker.title + ' here.</a></p>' );
+				infoWindow.open(map, marker);
+		}});
+
+		infoWindow.addListener('closeClick', function() {
+			infoWindow.setMarker(null);
+		});
+	}
 }
