@@ -114,7 +114,7 @@ var ViewModel = function() {
 			var results = [];
 
 			// If there is something in the search box
-			if(newValue.trim() != '') {
+			if(newValue.trim() !== '') {
 
 				// Iterate over the original list of locations
 				for(var i = 0; i < context.actualListViewListings.length; i++) {
@@ -128,7 +128,7 @@ var ViewModel = function() {
 
 					// If there is a match, store the Location object in the results array, and
 					// make show the marker is displayed for it
-					if(matches != null) {
+					if(matches !== null) {
 						results.push(context.actualListViewListings[i]);
 						//context.getMarkerById(i).setMap(context.mapView.getMap());
 						context.getMarkerById(i).setVisible(true);
@@ -172,20 +172,20 @@ ViewModel.prototype.storeMarker = function(key, value) {
 
 ViewModel.prototype.getMarkerById = function(id) {
 	return this.model.getMarkerById(id);
-}
+};
 
 ViewModel.prototype.getMarkers = function() {
 	return this.model.getMarkers();
-}
+};
 
 var MapView = function(viewModel) {
 	this.viewModel = viewModel;
 	this.map = null;
-}
+};
 
 MapView.prototype.getMap = function() {
 	return this.map;
-}
+};
 
 MapView.prototype.init = function(locations) {
 	
@@ -226,7 +226,7 @@ MapView.prototype.init = function(locations) {
 		marker.addListener('click', (function(location) {
 			return function() {
 				context.populateInfoWindow(this, location.getSearchTerm(), location.relevance, infoWindow);
-			}
+			};
 		})(location));
 		map.fitBounds(bounds);
 	}
@@ -242,7 +242,7 @@ MapView.prototype.init = function(locations) {
 MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance, infoWindow) {
 	
 	// Check to see if an info window was displayed previously, and if it was, close it.
-	if(this.infoWindow != null) {
+	if(this.infoWindow) {
     	this.infoWindow.close();
     }
 
@@ -258,7 +258,7 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance, i
 
 		infoWindow.marker = marker;
 		marker.setAnimation(google.maps.Animation.BOUNCE);	
-		var wikiUrl = 'http://en.wikipedggia.org/w/api.php?action=opensearch&search=' + searchTerm +
+		var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + searchTerm +
  		'&format=json&callback=wikiCallback';
 
 		$.ajax({
@@ -270,7 +270,7 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance, i
 				var articleLink = response[3][0];
 
 				if(!articleText) {
-					articleText = "Article text not found."
+					articleText = "Article text not found.";
 				}
 
 				if(!articleLink) {
@@ -293,13 +293,10 @@ MapView.prototype.populateInfoWindow = function(marker, searchTerm, relevance, i
 				infoWindow.setContent('<div>There appears to be a problem obtaining Wikipedia information. Try later.</div>');
 				infoWindow.open(map, marker);
 			}
-
-
-
-	});
+		});
 	}
-}
+};
 
 function googleApiError() {
-	window.alert('Error! The Google API has broken. Please try again later.')
+	window.alert('Error! The Google API has broken. Please try again later.');
 }
